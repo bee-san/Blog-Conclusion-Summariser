@@ -3,15 +3,17 @@ Produced by Brandon Skerritt
 https://skerritt.tech
 Instagram: @brandon.codes
 Email: brandon@skerritt.tech
+
 Remove stop words
 Create frequency table of words - how many times each word appears in the text
 Assign TF score to each sentence depending on the words it contains and the frequency table
 Assign IDF Score to each sentence, same as above
 Build summary by adding every sentence above a certain score threshold
 Only chooses top 3 highest scoring sentences
-*/    
 
-// import jquery CDN
+Requirements:
+JQuery
+*/    
 
 function prettify(document){
     // Turns an array of words into lowercase and removes stopwords
@@ -152,6 +154,30 @@ function inverseDocumentFrequency(document){
     return IDFSentences;
 }
 
+function longerSentenceWeighting(sentence){
+    // longer sentences are weighted better
+    // has to be how many words
+    return (length(sentence.split(" ")) * 1.5);
+}
+
+function isNumber(n) {
+    return !isNaN(parseFloat(n)) && isFinite(n);
+  }
+
+function numberWeighting(sentence){
+    // negative weighting on setnences with just numbers in them
+    temp = sentence.split(" ");
+    weighting = 1.0;
+    for (var item in temp){
+        if (isNumber(item)){
+            // more numbers in a sentence, the harsher the weighting
+            // but still gets the option of having one or two numbers
+            weighting = weighting * 0.8
+        }
+    }
+    return(temp * weighting)
+}
+
 function TFIDF(documents){
     // calculates TF*IDF
     const TFVals = termFrequency(documents);
@@ -161,7 +187,7 @@ function TFIDF(documents){
 
     for (const [key, value] of Object.entries(TFVals)){
         if (key in IDFVals){
-            TFidfDict[key] = TFVals[key] * IDFVals[key];
+            TFidfDict[key] = TFVals[key] * IDFVals[key] * longerSentenceWeighting(value);
         }
     }
 
@@ -199,6 +225,8 @@ function TFIDF(documents){
 // console.log(termFrequency("Hello, my name is Brandon. Brandon Brandon. The elephant jumps over the moon"));
 
 // get all text from .story-body within p tags on a BBC news web article
-let $article = $('.story-body').find('p').text();
+let $article = $('.post-full-content').find('p').text();
+console.log($article)
 // insert text into body of document
-let insert = $('.story-body').prepend(TFIDF($article));
+let $insert = TFIDF($article);
+// let insert = $('.story-body').prepend(TFIDF($article));
