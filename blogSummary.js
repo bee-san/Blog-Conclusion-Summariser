@@ -1,6 +1,7 @@
 /*(
 Produced by Brandon Skerritt
 https://skerritt.tech
+https://skerritt.blog 
 Instagram: @brandon.codes
 Email: brandon@skerritt.tech
 
@@ -31,7 +32,7 @@ function countWords(words){
     let dict = {};
     // for every single unique word
     for (let i = 0; i <= unique_words.length - 1; i++){
-        dict[unique_words[i]] = 0
+        dict[unique_words[i]] = 0;
         // see how many times this unique word appears in all words
         for (let x = 0; x <= words_without_stopwords.length -1; x++){
             if (unique_words[i] == words[x]){
@@ -55,7 +56,7 @@ function termFrequency(document){
     const sentences = document.split(".").map(item => item.trim());
     sentences[0] = sentences[0].substring(146);
 
-    const TFVals = countWords(words_without_stopwords)
+    const TFVals = countWords(words_without_stopwords);
     const unique_words = uniqueWords(words_without_stopwords);
 
     // actually makes it TF values according to formula
@@ -154,10 +155,11 @@ function inverseDocumentFrequency(document){
     return IDFSentences;
 }
 
-function longerSentenceWeighting(sentence){
+function longerSentenceWeighting(sentence, avg){
     // longer sentences are weighted better
     // has to be how many words
-    return (length(sentence.split(" ")) * 1.5);
+    // number was randomly chosen
+    return (sentence.toString().split(" ").length - (avg * 0.1));
 }
 
 function isNumber(n) {
@@ -166,16 +168,36 @@ function isNumber(n) {
 
 function numberWeighting(sentence){
     // negative weighting on setnences with just numbers in them
+    sentence = sentence.toString();
     temp = sentence.split(" ");
     weighting = 1.0;
     for (var item in temp){
         if (isNumber(item)){
             // more numbers in a sentence, the harsher the weighting
             // but still gets the option of having one or two numbers
-            weighting = weighting * 0.8
+            // number was randomly chosen
+            weighting = weighting + 1;
         }
     }
-    return(temp * weighting)
+    
+    // length of sentence takeaway percentage of sentence which is numbers
+    return(temp.length - temp.length / weighting);
+}
+
+
+function averageSentenceLength(documents){
+    var total = 0.0;
+    var totalSentences = 0.0;
+    
+    const sentences = documents.split(".")
+
+    totalSentences = sentences.length;
+
+    for (const x in sentences){
+        total = total + x;
+    }
+    // how many sentences / how many words = avg num of words per sentence
+    return(totalSentences / total);
 }
 
 function TFIDF(documents){
@@ -185,12 +207,16 @@ function TFIDF(documents){
 
     let TFidfDict = {};
 
+    // TODO fix this
+    avgSntLen = averageSentenceLength(documents);																																																			
+																																						
+
     for (const [key, value] of Object.entries(TFVals)){
         if (key in IDFVals){
-            TFidfDict[key] = TFVals[key] * IDFVals[key] * longerSentenceWeighting(value);
+            // TFidfDict[key] = TFVals[key] * IDFVals[key] * longerSentenceWeighting(value) * numberWeighting(value);
+            TFidfDict[key] = TFVals[key] * IDFVals[key] * longerSentenceWeighting(value, avgSntLen);
         }
     }
-
 
     let max = 0.0;
     let max2 = 0.0;
@@ -225,8 +251,7 @@ function TFIDF(documents){
 // console.log(termFrequency("Hello, my name is Brandon. Brandon Brandon. The elephant jumps over the moon"));
 
 // get all text from .story-body within p tags on a BBC news web article
-let $article = $('.post-full-content').find('p').text();
-console.log($article)
+let $article = $('.post-content').find('p').text();
 // insert text into body of document
 let $insert = TFIDF($article);
 // let insert = $('.story-body').prepend(TFIDF($article));
